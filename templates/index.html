@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Sensor Data with Graph</title>
+    <style>
+        body { margin: 0; display: flex; height: 100vh; }
+        #left { flex: 1; height: 100%; }
+        #right { flex: 1; height: 100%; padding: 20px; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <!-- Left Half: 3D Axes -->
+    <div id="left">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script>
+            // Initialize Three.js scene, camera, renderer
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 2 / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth / 2, window.innerHeight);
+            document.getElementById('left').appendChild(renderer.domElement);
+
+            // Create axes helper
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+
+            // Position camera
+            camera.position.z = 5;
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                // Fetch sensor data
+                fetch('/data')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Convert accelerometer data to rotation (degrees)
+                        const roll = Math.atan2(-data.Ay, data.Az) * (180 / Math.PI);
+                        const pitch = Math.atan2(data.Ax, data.Az) * (180 / Math.PI);
+                        // Apply rotations (convert to radians)
+                        axesHelper.rotation.x = pitch * (Math.PI / 180);
+                        axesHelper.rotation.y = roll * (Math.PI / 180);
+                    });
+                renderer.render(scene, camera);
+            }
+            animate();
+        </script>
+    </div>
+
+    <!-- Right Half: Graph -->
+    <div id="right">
+        <canvas id="sensorChart"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Initialize Chart.js
+            const ctx = document.getElementById('sensorChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Time labels
+                    datasets: [
+                        { label: 'Gx', borderColor: 'red', data: [] },
+                        { label: 'Gy', borderColor: 'green', data: [] },
+                        { label: 'Gz', borderColor: 'blue', data: [] }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: { display: true, title: { display: true, text: 'Time' } },
+                        y: { display: true, title: { display: true, text: 'Value' } }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Function to update the graph
+            function updateGraph() {
+                fetch('/data')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Add new data points
+                        const time = new Date().toLocaleTimeString();
+                        chart.data.labels.push(time);
+                        chart.data.datasets[0].data.push(data.Gx);
+                        chart.data.datasets[1].data.push(data.Gy);
+                        chart.data.datasets[2].data.push(data.Gz);
+
+                        // Keep only the last 50 data points
+                        if (chart.data.labels.length > 50) {
+                            chart.data.labels.shift();
+                            chart.data.datasets[0].data.shift();
+                            chart.data.datasets[1].data.shift();
+                            chart.data.datasets[2].data.shift();
+                        }
+
+                        // Update the chart
+                        chart.update();
+                    });
+            }
+
+            // Update the graph every 100ms
+            setInterval(updateGraph, 100);
+        </script>
+    </div>
+</body>
+</html>
