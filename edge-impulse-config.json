@@ -1,0 +1,12 @@
+{
+    "host": "edgeimpulse.com",
+    "jwtToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMyMDM0NCwicGVybWlzc2lvbnMiOltdLCJpYXQiOjE3Mzk3NzMwMjAsImV4cCI6MTc0MjM2NTAyMH0.Zsd7jYYnl2IrgyuyYogXj6ce9U_5mxsX0bmzJaJwqqw",
+    "lastVersionCheck": 1739772996071,
+    "dataForwarderDevices": {},
+    "daemonDevices": {},
+    "runner": {
+        "storagePath": "/home/lxlit/.ei-linux-runner/storage"
+    },
+    "linuxProjectId": 623788,
+    "audio": "hw:0,0"
+}
